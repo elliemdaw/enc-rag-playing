@@ -2,3 +2,4 @@ sentence-transformers==3.2.1
 tenseal==0.3.15
 numpy==2.1.2
 ollama==0.3.3
+nltk==3.9.1

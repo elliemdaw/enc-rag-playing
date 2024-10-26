@@ -9,12 +9,14 @@ def main():
     documents = [
         "The quick brown fox jumps over the lazy dog.",
         "Artificial intelligence is transforming industries.",
-        "Encrypted search enables privacy-preserving data retrieval."
+        "Encrypted search enables privacy-preserving data retrieval.",
+        "sample_text.txt",
+        "another_sample.txt"
     ]
     rag.add_documents(documents)
 
     # User query
-    query = "How does encrypted search work?"
+    query = "What are the benefits of encrypted search in privacy?"
 
     # Encrypt query embedding
     enc_query_embedding = rag.encrypt_query(query)

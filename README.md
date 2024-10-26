@@ -6,8 +6,8 @@ This runs locally using Ollama.
 - Requires ollama installed and running on your machine
 `pip install -r requirements.txt`
 ### Usage
-In its current state, everything is hard-coded. It has some print statements which helps you to see what's happening. I'll get this refactored into something nice, but for now:
-`python encrypted_rag.py`
+Go into `main.py` and set up the document store and your query.
+Then, `python main.py`
 
 ### Details
 - The encryption of vectors is done using TenSEAL, using the CKKS scheme
@@ -16,7 +16,7 @@ In its current state, everything is hard-coded. It has some print statements whi
 ### Next steps
 - [x] Refactor into classes
 - [ ] Allow user to provide query
-- [ ] Allow user to provide documents for RAG
+- [x] Allow user to provide documents for RAG
 - [ ] Move sentence transformers locally as well
 - [ ] Actual storage for embeddings
 

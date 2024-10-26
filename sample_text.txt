@@ -1,0 +1,3 @@
+RAG stands for Retrieval Augmented Generation.
+There are some cloud providers such as Pinecone which host databases of vector embeddings for developers building RAG applications.
+Those services provide APIs for developers to chunk, index, store, and query the databases.

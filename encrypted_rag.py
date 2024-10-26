@@ -1,91 +1,175 @@
-# embeddings
-from sentence_transformers import SentenceTransformer
+# # embeddings
+# from sentence_transformers import SentenceTransformer
 
-# Load the embedding model
-model = SentenceTransformer('all-MiniLM-L6-v2')
+# # Load the embedding model
+# model = SentenceTransformer('all-MiniLM-L6-v2')
 
-# Sample documents
-documents = [
-    "The quick brown fox jumps over the lazy dog.",
-    "Artificial intelligence is transforming industries.",
-    "Encrypted search enables privacy-preserving data retrieval."
-]
+# # Sample documents
+# documents = [
+#     "The quick brown fox jumps over the lazy dog.",
+#     "Artificial intelligence is transforming industries.",
+#     "Encrypted search enables privacy-preserving data retrieval."
+# ]
 
-# Generate embeddings
-embeddings = model.encode(documents)
+# # Generate embeddings
+# embeddings = model.encode(documents)
 
-print(f"### Embeddings len: ({len(embeddings[0])})") #: {embeddings[0]}")
+# print(f"### Embeddings len: ({len(embeddings[0])})") #: {embeddings[0]}")
 
-# encryption
+# # encryption
+# import tenseal as ts
+
+# # Initialize TenSEAL context
+# context = ts.context(
+#     ts.SCHEME_TYPE.CKKS,
+#     poly_modulus_degree=8192,
+#     coeff_mod_bit_sizes=[60, 40, 40, 60]
+# )
+# context.generate_galois_keys()
+# context.global_scale = 2 ** 40
+
+# # Encrypt embeddings
+# encrypted_embeddings = []
+# for emb in embeddings:
+#     enc_emb = ts.ckks_vector(context, emb)
+#     encrypted_embeddings.append(enc_emb)
+
+# # query enc
+# # User query
+# query = "How does encrypted search work?"
+
+# # Generate query embedding
+# query_embedding = model.encode([query])[0]
+
+# # Encrypt query embedding
+# enc_query_embedding = ts.ckks_vector(context, query_embedding)
+
+# print(f"### Encrypted query Embedding: {enc_query_embedding}")
+
+# # encrypted dot product
+# # Compute encrypted similarity scores (dot products)
+# encrypted_scores = []
+# for enc_emb in encrypted_embeddings:
+#     # Element-wise multiplication and summation (dot product)
+#     enc_score = enc_emb.dot(enc_query_embedding)
+#     encrypted_scores.append(enc_score)
+
+# print(f"### Encrypted Scores: {encrypted_scores}")
+
+# # get top k
+# # Decrypt similarity scores
+# decrypted_scores = [enc_score.decrypt()[0] for enc_score in encrypted_scores]
+
+# print(f"### Decrypted Scores: {decrypted_scores}")
+
+
+# import numpy as np
+
+# # Number of top results to retrieve
+# K = 2
+
+# # Get indices of top K similarity scores
+# top_k_indices = np.argsort(decrypted_scores)[-K:][::-1]
+
+# # Retrieve top documents
+# top_documents = [documents[i] for i in top_k_indices]
+
+# # LLM usage
+# import ollama
+# # Prepare the prompt for the LLM
+# prompt = f"Answer the following question based on the provided documents.\n\nQuestion: {query}\n\nDocuments:\n"
+# for idx, doc in enumerate(top_documents):
+#     prompt += f"{idx+1}. {doc}\n"
+
+# print(f"### Prompt: {prompt}")
+
+# try:
+#     response = ollama.generate(model="llama3.1", prompt=prompt)
+# except Exception as e:
+#     print(f"Error generating ollama response: {e}")
+
+# print(f"### Response: {response['response']}")
+
+
+# encrypted_rag.py
+
 import tenseal as ts
-
-# Initialize TenSEAL context
-context = ts.context(
-    ts.SCHEME_TYPE.CKKS,
-    poly_modulus_degree=8192,
-    coeff_mod_bit_sizes=[60, 40, 40, 60]
-)
-context.generate_galois_keys()
-context.global_scale = 2 ** 40
-
-# Encrypt embeddings
-encrypted_embeddings = []
-for emb in embeddings:
-    enc_emb = ts.ckks_vector(context, emb)
-    encrypted_embeddings.append(enc_emb)
-
-# query enc
-# User query
-query = "How does encrypted search work?"
-
-# Generate query embedding
-query_embedding = model.encode([query])[0]
-
-# Encrypt query embedding
-enc_query_embedding = ts.ckks_vector(context, query_embedding)
-
-print(f"### Encrypted query Embedding: {enc_query_embedding}")
-
-# encrypted dot product
-# Compute encrypted similarity scores (dot products)
-encrypted_scores = []
-for enc_emb in encrypted_embeddings:
-    # Element-wise multiplication and summation (dot product)
-    enc_score = enc_emb.dot(enc_query_embedding)
-    encrypted_scores.append(enc_score)
-
-print(f"### Encrypted Scores: {encrypted_scores}")
-
-# get top k
-# Decrypt similarity scores
-decrypted_scores = [enc_score.decrypt()[0] for enc_score in encrypted_scores]
-
-print(f"### Decrypted Scores: {decrypted_scores}")
-
-
+from sentence_transformers import SentenceTransformer
 import numpy as np
-
-# Number of top results to retrieve
-K = 2
-
-# Get indices of top K similarity scores
-top_k_indices = np.argsort(decrypted_scores)[-K:][::-1]
-
-# Retrieve top documents
-top_documents = [documents[i] for i in top_k_indices]
-
-# LLM usage
 import ollama
-# Prepare the prompt for the LLM
-prompt = f"Answer the following question based on the provided documents.\n\nQuestion: {query}\n\nDocuments:\n"
-for idx, doc in enumerate(top_documents):
-    prompt += f"{idx+1}. {doc}\n"
+import logging
 
-print(f"### Prompt: {prompt}")
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s]:%(funcName)s %(message)s",
+    )
 
-try:
-    response = ollama.generate(model="llama3.1", prompt=prompt)
-except Exception as e:
-    print(f"Error generating ollama response: {e}")
+class EncryptedRAG:
+    def __init__(self, model_name='all-MiniLM-L6-v2'):
+        logging.debug("Initializing EncryptedRAG instance")
+        self.model = SentenceTransformer(model_name)
+        # Initialize TenSEAL context
+        self.context = self._create_context()
+        # Initialize storage for documents and encrypted embeddings
+        self.documents = []
+        self.encrypted_embeddings = []
 
-print(f"### Response: {response['response']}")
+    def _create_context(self):
+        # Private method to create TenSEAL context
+        logging.debug("Creating TenSEAL context")
+        context = ts.context(
+            ts.SCHEME_TYPE.CKKS,
+            poly_modulus_degree=8192,
+            coeff_mod_bit_sizes=[60, 40, 40, 60]
+        )
+        context.generate_galois_keys()
+        context.global_scale = 2 ** 40
+        return context
+
+    def add_documents(self, documents):
+        # Add documents and generate encrypted embeddings
+        self.documents.extend(documents)
+        embeddings = self.model.encode(documents)
+        for emb in embeddings:
+            enc_emb = ts.ckks_vector(self.context, emb)
+            self.encrypted_embeddings.append(enc_emb)
+
+    def encrypt_query(self, query):
+        # Generate and encrypt query embedding
+        query_embedding = self.model.encode([query])[0]
+        enc_query_embedding = ts.ckks_vector(self.context, query_embedding)
+        return enc_query_embedding
+
+    def compute_similarity(self, enc_query_embedding):
+        # Compute encrypted similarity scores (dot products)
+        encrypted_scores = []
+        for enc_emb in self.encrypted_embeddings:
+            enc_score = enc_emb.dot(enc_query_embedding)
+            encrypted_scores.append(enc_score)
+        return encrypted_scores
+
+    def decrypt_scores(self, encrypted_scores):
+        # Decrypt similarity scores
+        decrypted_scores = [enc_score.decrypt()[0] for enc_score in encrypted_scores]
+        return decrypted_scores
+
+    def get_top_k_documents(self, decrypted_scores, K=2):
+        # Get indices of top K similarity scores
+        logging.debug(f"Getting top K documents, K={K}")
+        top_k_indices = np.argsort(decrypted_scores)[-K:][::-1]
+        # Retrieve top documents
+        top_documents = [self.documents[i] for i in top_k_indices]
+        return top_documents
+
+    def generate_response(self, query, top_documents, model_name='llama3.1'):
+        # Prepare the prompt for the LLM
+        prompt = f"Answer the following question based on the provided documents.\n\nQuestion: {query}\n\nDocuments:\n"
+        for idx, doc in enumerate(top_documents):
+            prompt += f"{idx+1}. {doc}\n"
+        # Generate response using Ollama
+        try:
+            response = ollama.generate(model=model_name, prompt=prompt)
+            return response['response']
+        except Exception as e:
+            logging.error(f"Error generating Ollama response: {e}")
+            return None

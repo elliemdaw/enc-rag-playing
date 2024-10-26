@@ -4,7 +4,7 @@ This runs locally using Ollama.
 
 ### Setup and Installation
 - Requires ollama installed and running on your machine
-`pip install requirements.txt`
+`pip install -r requirements.txt`
 ### Usage
 In its current state, everything is hard-coded. It has some print statements which helps you to see what's happening. I'll get this refactored into something nice, but for now:
 `python encrypted_rag.py`
@@ -14,10 +14,11 @@ In its current state, everything is hard-coded. It has some print statements whi
 - Dot product is used as a proxy for similarity search (higher numbers indicate more similar vectors)
 
 ### Next steps
-- Refactor into classes
-- Allow user to provide query
-- Allow user to provide documents for RAG
-- Actual storage for embeddings
+- [x] Refactor into classes
+- [ ] Allow user to provide query
+- [ ] Allow user to provide documents for RAG
+- [ ] Move sentence transformers locally as well
+- [ ] Actual storage for embeddings
 
 ### References:
 TenSEAL: https://github.com/OpenMined/TenSEAL
